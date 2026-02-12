@@ -1,109 +1,121 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciador de Sorteios</title>
+    <title>Gerenciador de Sorteios - 2026</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0f0f12; color: #e0e0e0; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: #1c1c21; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); width: 360px; overflow: hidden; border: 1px solid #333; }
-        
-        /* Abas */
-        .tabs { display: flex; background: #25252b; }
-        .tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-weight: bold; color: #888; transition: 0.3s; border-bottom: 2px solid transparent; }
-        .tab.active { color: #00e676; border-bottom: 2px solid #00e676; background: #2d2d35; }
+        :root {
+            --primary: #5865F2; /* Cor Discord */
+            --bg: #23272a;
+            --card: #2c2f33;
+            --text: #ffffff;
+            --accent: #43b581;
+        }
 
-        .content { padding: 25px; display: none; }
-        .content.active { display: block; }
-
-        label { display: block; font-size: 11px; color: #aaa; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
-        input { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #333; background: #121214; color: #fff; font-size: 18px; box-sizing: border-box; outline: none; margin-bottom: 20px; }
-        input:focus { border-color: #00e676; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 20px; }
         
-        .res-box { background: #25252b; padding: 15px; border-radius: 12px; border-left: 4px solid #00e676; }
-        .line { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
-        .highlight { color: #fff; font-weight: bold; }
-        .robux-val { color: #fcc419; font-weight: bold; font-size: 18px; }
+        .container { width: 100%; max-width: 600px; background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+
+        .tab-buttons { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 10px; border: none; border-radius: 5px; cursor: pointer; background: #4f545c; color: white; font-weight: bold; }
+        .tab-btn.active { background: var(--primary); }
+
+        .aba { display: none; }
+        .aba.active { display: block; }
+
+        input { width: 95%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #444; background: #40444b; color: white; }
+        button.calc-btn { width: 100%; padding: 12px; background: var(--accent); border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; }
+
+        .resultado { margin-top: 20px; padding: 15px; background: #36393f; border-radius: 8px; border-left: 5px solid var(--primary); }
+        
+        /* Barra de Progresso Car Parking */
+        .progress-container { margin-top: 20px; background: #40444b; border-radius: 10px; height: 25px; position: relative; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.5s; }
+        .progress-text { position: absolute; width: 100%; text-align: center; font-size: 12px; line-height: 25px; font-weight: bold; }
+        .progress-text { position: absolute; width: 100%; text-align: center; font-size: 12px; line-height: 25px; font-weight: bold; }
+
+        .alert-gratis { display: none; background: #f04747; color: white; padding: 10px; border-radius: 5px; margin-top: 10px; text-align: center; font-weight: bold; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% {opacity: 1;} 50% {opacity: 0.7;} 100% {opacity: 1;} }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <div class="tabs">
-        <div class="tab active" onclick="openTab(event, 'sorteio')">SORTEIO</div>
-        <div class="tab" onclick="openTab(event, 'divisao')">DIVISÃO</div>
+<div class="container">
+    <h2>Sistema de Sorteios</h2>
+    
+    <div class="tab-buttons">
+        <button class="tab-btn active" onclick="openTab('cpm')">Car Parking</button>
+        <button class="tab-btn" onclick="openTab('unb')">UnbelievaBoat</button>
     </div>
 
-    <!-- Aba 1: Calculadora de Sorteio -->
-    <div id="sorteio" class="content active">
-        <label>Total Arrecadado (R$):</label>
-        <input type="number" id="totalArrecadado" placeholder="Ex: 40" oninput="calcSorteio()">
+    <!-- ABA CAR PARKING -->
+    <div id="cpm" class="aba active">
+        <h3>💰 Car Parking Multiplayer</h3>
+        <label>Total Arrecadado (Moedas):</label>
+        <input type="number" id="inputCPM" placeholder="Ex: 1000000" oninput="atualizarBarra()">
         
-        <div class="res-box">
-            <div class="line"><span>Prêmio (75%):</span> <span class="highlight" id="p_premio">R$ 0,00</span></div>
-            <div class="line"><span>Meu Lucro (25%):</span> <span class="highlight" id="p_lucro">R$ 0,00</span></div>
-            <hr style="border: 0; border-top: 1px solid #3d3d45;">
-            <div class="line">
-                <span>MEU LUCRO EM ROBUX:</span> 
-                <span class="robux-val" id="p_robux">0 R$</span>
-            </div>
+        <div class="progress-container">
+            <div class="progress-bar" id="barCPM"></div>
+            <div class="progress-text" id="textCPM">0 / 50.000.000</div>
         </div>
-        <p style="font-size: 10px; color: #666; margin-top: 15px; text-align: center;">Taxa: 1 Real = 20.83 Robux (Robux Barato)</p>
+        <div id="alertGratis" class="alert-gratis">🚨 LIMITE ATINGIDO! PRÓXIMO SORTEIO: GRÁTIS 🚨</div>
+        
+        <button class="calc-btn" onclick="calcular('CPM')" style="margin-top:15px">Calcular Divisão</button>
+        
+        <div id="resCPM" class="resultado" style="display:none"></div>
     </div>
 
-    <!-- Aba 2: Calculadora de Divisão -->
-    <div id="divisao" class="content">
-        <label>Valor Total do Prêmio (R$):</label>
-        <input type="number" id="valorDividir" placeholder="Ex: 30" oninput="calcDivisao()">
+    <!-- ABA UNBELIEVABOAT -->
+    <div id="unb" class="aba">
+        <h3>🤖 UnbelievaBoat (Bot)</h3>
+        <label>Total Arrecadado (Sonhos/Coins):</label>
+        <input type="number" id="inputUnb" placeholder="Ex: 50000">
+        <button class="calc-btn" onclick="calcular('Unb')">Calcular Divisão</button>
         
-        <label>Quantos Ganhadores?</label>
-        <input type="number" id="qtdGanhadores" placeholder="Ex: 2" oninput="calcDivisao()">
-
-        <div class="res-box">
-            <div class="line"><span>Cada um recebe:</span> <span class="highlight" id="p_cada">R$ 0,00</span></div>
-            <div class="line" style="color: #fcc419;"><span>Em Robux:</span> <span id="p_cada_robux">0 R$</span></div>
-        </div>
+        <div id="resUnb" class="resultado" style="display:none"></div>
     </div>
 </div>
 
 <script>
-    const TAXA_ROBUX = 20.83;
+    const LIMITE_CPM = 50000000;
 
-    function openTab(evt, tabName) {
-        let contents = document.getElementsByClassName("content");
-        for (let i = 0; i < contents.length; i++) contents[i].classList.remove("active");
-        
-        let tabs = document.getElementsByClassName("tab");
-        for (let i = 0; i < tabs.length; i++) tabs[i].classList.remove("active");
-        
-        document.getElementById(tabName).classList.add("active");
-        evt.currentTarget.classList.add("active");
+    function openTab(tabName) {
+        document.querySelectorAll('.aba').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(tabName).classList.add('active');
+        event.currentTarget.classList.add('active');
     }
 
-    function formatar(v) {
-        return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    function atualizarBarra() {
+        let valor = parseFloat(document.getElementById('inputCPM').value) || 0;
+        let porcentagem = (valor / LIMITE_CPM) * 100;
+        if (porcentagem > 100) porcentagem = 100;
+
+        document.getElementById('barCPM').style.width = porcentagem + "%";
+        document.getElementById('textCPM').innerText = valor.toLocaleString() + " / 50.000.000";
+
+        if (valor >= LIMITE_CPM) {
+            document.getElementById('alertGratis').style.display = 'block';
+        } else {
+            document.getElementById('alertGratis').style.display = 'none';
+        }
     }
 
-    function calcSorteio() {
-        const total = parseFloat(document.getElementById('totalArrecadado').value) || 0;
-        const lucroRS = total * 0.25;
-        const premioRS = total * 0.75;
-        const lucroRobux = Math.floor(lucroRS * TAXA_ROBUX);
+    function calcular(tipo) {
+        let total = parseFloat(document.getElementById('input' + tipo).value) || 0;
+        if (total <= 0) return alert("Insira um valor válido!");
 
-        document.getElementById('p_premio').innerText = formatar(premioRS);
-        document.getElementById('p_lucro').innerText = formatar(lucroRS);
-        document.getElementById('p_robux').innerText = lucroRobux + " R$";
-    }
+        let taxa = total * 0.25;
+        let premio = total * 0.75;
 
-    function calcDivisao() {
-        const valor = parseFloat(document.getElementById('valorDividir').value) || 0;
-        const qtd = parseInt(document.getElementById('qtdGanhadores').value) || 1;
-        
-        const cadaRS = valor / qtd;
-        const cadaRobux = Math.floor(cadaRS * TAXA_ROBUX);
-
-        document.getElementById('p_cada').innerText = formatar(cadaRS);
-        document.getElementById('p_cada_robux').innerText = cadaRobux + " R$";
+        let resDiv = document.getElementById('res' + tipo);
+        resDiv.style.display = 'block';
+        resDiv.innerHTML = `
+            <strong>DIVISÃO (Taxa 25%):</strong><br>
+            🏆 Prêmio p/ Vencedor: <span style="color:#43b581">${premio.toLocaleString()}</span><br>
+            💼 Sua Parte (Lucro): <span>${taxa.toLocaleString()}</span>
+        `;
     }
 </script>
 
